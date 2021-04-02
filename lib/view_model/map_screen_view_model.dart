@@ -41,18 +41,6 @@ class MapScreenViewModel extends ChangeNotifier{
         'assets/destination_map_marker.png');
   }
 
-  void setInitialLocation() async {
-    // set the initial location by pulling the user's
-    // current location from the location's getLocation()
-    currentLocation = await location.getLocation();
-
-    // hard-coded destination for this example
-    destinationLocation = LocationData.fromMap({
-      "latitude": _DEST_LOCATION.latitude,
-      "longitude": _DEST_LOCATION.longitude
-    });
-  }
-
   void listenForLocationChange(){
 
     location.onLocationChanged().listen((LocationData cLoc) {
@@ -61,7 +49,6 @@ class MapScreenViewModel extends ChangeNotifier{
       print("locatin updated");
     });
 
-    setInitialLocation();
     setSourceAndDestinationIcons();
 
   }
@@ -85,11 +72,20 @@ class MapScreenViewModel extends ChangeNotifier{
 
   void showPinsOnMap() async{
     currentLocation = await location.getLocation();
-    // get a LatLng for the source location
-    // from the LocationData currentLocation object
-    log(currentLocation.toString());
-    var pinPosition =
-    LatLng(currentLocation.latitude, currentLocation.longitude);
+    var pinPosition;
+    if(currentLocation==null){
+      currentLocation = await location.getLocation();
+      pinPosition = LatLng(_SOURCE_LOCATION.latitude, _SOURCE_LOCATION.longitude);
+    }else{
+      pinPosition=LatLng(currentLocation.latitude, currentLocation.longitude);
+    }
+
+    destinationLocation = LocationData.fromMap({
+      "latitude": _DEST_LOCATION.latitude,
+      "longitude": _DEST_LOCATION.longitude
+    });
+
+
     // get a LatLng out of the LocationData object
     var destPosition =
     LatLng(destinationLocation.latitude, destinationLocation.longitude);
@@ -133,14 +129,13 @@ class MapScreenViewModel extends ChangeNotifier{
           polylineId: PolylineId("poly"),
           color: GoogleMapConstants.POLYLINE_COLOR,
           points: polylineCoordinates));
-      notifyListeners();
+
     }
+    notifyListeners();
   }
 
   void updatePinOnMap() async {
-    // create a new CameraPosition instance
-    // every time the location changes, so the camera
-    // follows the pin as it moves with an animation
+
     CameraPosition cPosition = CameraPosition(
       zoom: GoogleMapConstants.CAMERA_ZOOM,
       tilt: GoogleMapConstants.CAMERA_TILT,
